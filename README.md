@@ -45,28 +45,26 @@ parsedTrajectory = javaADSbParser("./impalaFiles/flight_DLH9U.log");
 6. Plot the parsed trajectory in Matlab: 
 <pre>
 javaADSbParserPlot(parsedTrajectory);
-
 javaADSbParserPlotCombined(parsedTrajectory);
 </pre>
 
-  or (with interpolated aircraft states of parsed trajectory, max. time-step: 10 sec.): 
+  or (with interpolated aircraft states of parsed trajectory - max. time-step: 10 sec.): 
 <pre>
 javaADSbParserPlot(parsedTrajectory, 10);
-
 javaADSbParserPlotCombined(parsedTrajectory, 10);
 </pre>
 
 
 ## Redundancy-filtration, interpolation and reliability-channel
 
-The data parser is filtering redundant samples in horizontal and vertical plane. That is to say, samples which can be interpolated on an orthodrome (great circle) in the horizontal plane and with linear interpolation in the vertical plane, within certain margins, are removed from the parsed trajectory. In combination with the filtering of faulty data, this led to a reduction of the number of samples to 7.5 &#37; in a dataset comprising 5467 trajectories. Nevertheless is the underlaying raw-data (version used by the parser, not initial state-vectors-data4 trajectory) stored in the return-struct (parsedTrajectory.raw). For to use the afformentioned memory reduction it is recommended to clear or remove this field (parsedTrajectory.raw) from the result-struct. 
-For to re-obtain the aircraft states, the position (horizontal plane) needs to be interpolated on an orthodrome (great circle) and the baro altitude (vertical plane) needs to be interpolated linearly. This can be done with following function-call in MATLAB: 
+The data parser is filtering redundant samples in horizontal and vertical plane. That is to say, samples which can be interpolated on an orthodrome (great circle) in the horizontal plane and with linear interpolation in the vertical plane, within certain margins, are removed from the parsed trajectory. In combination with the filtering of faulty data, this led to a reduction of the number of samples to 7.5 &#37; in a dataset comprising 5467 trajectories. Nevertheless is the underlying raw-data (version used by the parser, not initial state-vectors-data4 trajectory) stored in the return-struct (parsedTrajectory.raw). For using the aforementioned memory reduction of redundancy-filtration it is proposed to clear or remove this field (parsedTrajectory.raw) from the result-struct, if it's not required anymore. Especially datasets with numerous parsed trajectories benefit from this memory reduction. 
+For re-obtaining the aircraft states, the position (horizontal plane) needs to be interpolated on an orthodrome (great circle) and the baro altitude (vertical plane) needs to be interpolated linearly. The margins of redundancy-filtration apply for these interpolated states. The interpolation can be done with following function-call in MATLAB: 
 <pre>
 interpolatedStates = javaADSbParserInterpolate(parsedTrajectory, timestamps);
 </pre>
 
-The removal of redundant samples also removes the information, at which timestamps underlying raw-samples (supporting samples) were used to support the data history. Therefore the struct (parsedTrajectory.samplingTime) contains all used valid (fault-filterd, but not redundant-filtered) sample-timestamps of horizontal and vertical planes. You may also clear/ remove this field for memory reduction, if not required. 
-Furthermore the return struct contains a reliability-channel ([parsedTrajectory.reliabilityTime, parsedTrajectory.reliability]). This channel shall indicate the reliability of the final (re-interpolated) trajectory, ranges from 0 to 1 and has a time-step of 5 sec. For example: In trajectory phases without receiver coverage (no supporting samples), the reliability-channel shall take 0 as value. For to assess the reliability of the (re-interpolated) trajectory, this channel is recommended to be used. The reliability-channel is an input for the reliability-metric. 
+The filtering of redundant samples also removes information about the timestamps of underlying supporting samples. These samples passed the data-fault filtering and are considered to be valid samples to define the final trajectory, but some of them are probably removed during redundancy filtering. With this removal also information about the timestamps of received state updates via ADS-B are removed. Therefore the struct (parsedTrajectory.samplingTime) contains all used valid (fault-filtered, but not redundancy-filtered) sample-timestamps of horizontal and vertical planes. You may also clear/ remove this field for memory reduction, if it's not required. 
+The return struct additionally contains a reliability-channel ([parsedTrajectory.reliabilityTime, parsedTrajectory.reliability]). This channel shall indicate the reliability of the final (re-interpolated) trajectory, ranges from 0 to 1 and has a time-step of 5 sec. For example: In trajectory phases without receiver coverage (no supporting samples), the reliability-channel shall take 0 as value. For to assess the reliability of the (re-interpolated) trajectory, this channel is recommended to be used. The reliability-channel is an input for the reliability-metric. 
 
 
 ## How to use
@@ -81,7 +79,7 @@ For to request a historic flight you may use the following dummy Impala Shell re
 
 	SELECT * FROM state_vectors_data4 WHERE callsign='CALLSIGN' AND time>=0 AND time<=0 AND hour>=0 AND hour<=0;
   
-Please replace CALLSIGN with the desired callsign, whereby the String always needs be be sized to eight characters by adding spaces. For example: 
+Please replace CALLSIGN with the desired callsign, whereby the String always needs to be sized to eight characters by adding spaces. For example: 
 
 	Correct: callsign='FLIGHT  '
 	Wrong: callsign='FLIGHT'
@@ -104,7 +102,7 @@ For to automatically generate the required format for the ADS-B data parser, you
 
 	javaADSbParserRecompileAirportDatabase("./airports.csv", "./airportsRecompiled.csv");
 
-The directory of the recompiled aiport database needs to be stored in the variable *AIRPORT_DATABASE_FILE_DIR* of m-files *javaADSbParser.m* and *javaADSbParserParallel.m*. 
+The directory of the recompiled airport database needs to be stored in the variable *AIRPORT_DATABASE_FILE_DIR* of m-files *javaADSbParser.m* and *javaADSbParserParallel.m*. 
 
 
 ### How to use the MATLAB interface
@@ -123,20 +121,18 @@ This function-call can be used to parse multiple trajectories (even more than 20
 
 	parsedTrajectories = javaADSbParserParallelMultiple(["./fileDir/flight_A.log"; "./fileDir/flight_B.log"; ...]);
 
-This function-call parses all trajectory-files contained in the folder-directory *'./fileDir/folderWithFilesToParse/'*. There shouldn't be any other files in the directory than trajectory-log-files, exept other directories, as the data parser will try to parse all files found in the specified directory: 
+This function-call parses all trajectory-files contained in the folder-directory *'./fileDir/folderWithFilesToParse/'*. There shouldn't be any other files in the directory than trajectory-log-files, except other directories, as the data parser will try to parse all files found in the specified directory: 
 
 	parsedTrajectories = javaADSbParserDirectory('./fileDir/folderWithFilesToParse/');
 
 The following function-calls plot the raw and parsed trajectory of struct parsedTrajectory. You may refer to the source code of these functions to learn more about the structure of the returned structs of parsed trajectories: 
 
 	javaADSbParserPlot(parsedTrajectory);
-  
 	javaADSbParserPlotCombined(parsedTrajectory);
 
 To interpolate the aircraft states of parsed trajectory before plotting, you may use the following function-calls (max. interpolation time-step: interpolationTimeStep [sec.]). In most cases (with default settings), regarding the plot-visualization, the interpolation only effects the horizontal path. 
 
 	javaADSbParserPlot(parsedTrajectory, interpolationTimeStep);
-  
 	javaADSbParserPlotCombined(parsedTrajectory, interpolationTimeStep);
 
 Interpolation of aircraft states (see removal of redundant samples): 
