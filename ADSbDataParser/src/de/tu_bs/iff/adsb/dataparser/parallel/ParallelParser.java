@@ -8,10 +8,15 @@ import de.tu_bs.iff.adsb.dataparser.lib.*;
 public class ParallelParser {
 	
 	private int nextTrajectoryIndexToParse = 0;
+	private int joinedFinishedThreads = 0;
 	
-	ParserThread[] parserThreads;
+	private boolean stopParsing = false;
 	
-	public String airportDatabaseDir = null;
+	ParserThread[] parserThreads = null;
+	
+	public AirportDatabase airportDatabase = null;
+	
+	public boolean filterRedundantSamples;
 	
 	public TrajectoryStateVectorsData4[] trajectoryStateVectorsData4Array;
 	public TrajectoryVertical[] trajectoryVerticalArray;
@@ -31,7 +36,15 @@ public class ParallelParser {
 	 * @param airportDatabaseDir Directory to the airport database.
 	 */
 	public void setAirportDatabaseDir(String airportDatabaseDir) {
-		this.airportDatabaseDir = airportDatabaseDir;
+		airportDatabase = AirportDatabase.readInAirportDatabase(airportDatabaseDir);
+	}
+	
+	/**
+	 * Sets the airport database used for completeness-metric determination.
+	 * @param airportDatabase Object of airport database.
+	 */
+	public void setAirportDatabase(AirportDatabase airportDatabase) {
+		this.airportDatabase = airportDatabase;
 	}
 	
 	/**
@@ -61,10 +74,11 @@ public class ParallelParser {
 	 * Parse all Trajectories handed over by function setDirs(String[] dirs) in parallel mode.
 	 * @param threadCount Number of Threads to be used for parallel parsing.
 	 */
-	public void parseAll(int threadCount) {
-		if(airportDatabaseDir == null) {
-			System.out.println("No Airport-Database directory set. Completenss-metric will be -1 for all trajectories. ");
-		}
+	public void parseAll(int threadCount, boolean filterRedundantSamples) {
+		this.filterRedundantSamples = filterRedundantSamples;
+		
+		stopParsing = false;
+		joinedFinishedThreads = 0;
 		
 		nextTrajectoryIndexToParse = 0;
 		parserThreads = new ParserThread[threadCount];
@@ -78,17 +92,55 @@ public class ParallelParser {
 		for(int i=0; i<parserThreads.length; i++)
 			try {
 				parserThreads[i].join();
+				joinedFinishedThreads++;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 	}
 	
 	public int getNextTrajectoryIndexToParse() {
+		if(stopParsing)
+			return -1;
 		if(nextTrajectoryIndexToParse < dirs.length) {
 			nextTrajectoryIndexToParse++;
 			return nextTrajectoryIndexToParse-1;
 		} else
 			return -1;
+	}
+	
+	/**
+	 * Returns the number of already parsed Trajectories
+	 * @return Number of already parsed Trajectories
+	 */
+	public int getNumberOfParsedTrajectories() {
+		if(parserThreads == null)
+			return 0;
+		int estimatedNumberOfParsedTrajectories = nextTrajectoryIndexToParse - parserThreads.length + joinedFinishedThreads;
+		if(estimatedNumberOfParsedTrajectories >= 0)
+			return estimatedNumberOfParsedTrajectories;
+		else
+			return 0;
+	}
+	
+	/**
+	 * Returns status of trajectory parsing (started with function parseAll())
+	 * @return True if parsing is finished or never started, else false
+	 */
+	public boolean isFinished() {
+		if(parserThreads == null)
+			return true;
+		if(joinedFinishedThreads == parserThreads.length)
+			return true;
+		else
+			return false;
+	}
+	
+	/**
+	 * Requests the parallel parser to stop/cancel parsing at the next possible time. 
+	 * A resumption is not possible. 
+	 */
+	public void stopParsing() {
+		stopParsing = true;
 	}
 
 	/**

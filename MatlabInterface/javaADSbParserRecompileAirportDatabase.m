@@ -20,7 +20,7 @@ function javaADSbParserRecompileAirportDatabase(inputFileDir, outputFileDir)
 	elevationFieldIndex = 6;
 	fieldIndices = [nameFieldIndex; cityFieldIndex; countryFieldIndex; iataCodeFieldIndex; icaoCodeFieldIndex; latFieldIndex; lonFieldIndex; elevationFieldIndex];
 
-	java_AirportDatabase = javaObject("de.tu_bs.iff.adsb.dataparser.lib.AirportDatabase");					% variable containing the java object of class TrajectoryStateVectorsData4
+	java_AirportDatabase = javaObject("de.tu_bs.iff.adsb.dataparser.lib.AirportDatabase");					% variable containing the java object of class AirportDatabase
 	errorCode = javaMethod("recompileCSVdatabase", java_AirportDatabase, string(inputFileDir), string(outputFileDir), fieldIndices, 1, ',', '"', [""""], [""], false, true);
 
 	if(errorCode == 0)

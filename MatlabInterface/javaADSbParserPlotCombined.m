@@ -23,6 +23,10 @@ function javaADSbParserPlotCombined(parsedTrajectory, interpolationTimeStep)
 			interpolationTimestamps = sortrows(interpolationTimestamps);
 		end
 		interpolatedStates = javaADSbParserInterpolate(parsedTrajectory, interpolationTimestamps);
+	else
+		if(parsedTrajectory.redundancyFiltered)
+			disp('Warning: Redundant samples of the trajectory were filtered. It is recommended to use interpolations to regain the trajectory states. ');
+		end
 	end
 
 	callsign = parsedTrajectory.callsign;

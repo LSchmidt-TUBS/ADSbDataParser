@@ -145,7 +145,7 @@ public class TrajectoryHorizontal {
 	 * Data of tableRaw will not be changed. 
 	 * @return Error code; -1: error; 0: successful
 	 */
-	public int parseTrajectory() {
+	public int parseTrajectory(boolean filterRedundantOrthodromeInterpolationSamples) {
 		if(tableRaw.time == null)
 			return -1;
 		
@@ -172,8 +172,9 @@ public class TrajectoryHorizontal {
 		// Determine reliability
 		determineReliability(table);
 
-		// Filter redundant (orthodrome-interpolation) Samples in horizontal plane
-		filterOrthodromeInterpolation(table, /*ctdThreshold*/(double)0.01, /*ltdThreshold*/(double)0.1);
+		// Filter redundant (orthodrome-interpolation) Samples in horizontal plane (if requested)
+		if(filterRedundantOrthodromeInterpolationSamples)
+			filterRedundantOrthodromeInterpolationSamples(table, /*ctdThreshold*/(double)0.01, /*ltdThreshold*/(double)0.1);
 
 		return 0;
 	}
@@ -294,7 +295,7 @@ public class TrajectoryHorizontal {
 		// ... Calculate reliability with samplesWindowCount
 	}
 
-	private int filterOrthodromeInterpolation(TableHorizontal table, double ctdThreshold, double ltdThreshold) {
+	private int filterRedundantOrthodromeInterpolationSamples(TableHorizontal table, double ctdThreshold, double ltdThreshold) {
 		ArrayList<Integer> orthodromeAnchors = new ArrayList<Integer>();
 		
 		int firstAvailableSampleIndex = -1;

@@ -12,11 +12,14 @@ function parsedTrajectories = javaADSbParserParallel(fileDirs)
 
 % Directory to the airport database for completeness metric ("NONE" if no database available): 
 	AIRPORT_DATABASE_FILE_DIR = "NONE";
-	%AIRPORT_DATABASE_FILE_DIR = "./airportsRecompiled.csv";
+	%AIRPORT_DATABASE_FILE_DIR = "./airportDatabase.attapt";
 
 % Number of threads to be used (may be adapted): 
 	%THREAD_COUNT = 8;
 	THREAD_COUNT = feature('numcores')+1;
+
+% Setting for filtering of redundant samples (true: ON / false: OFF)
+	FILTER_REDUNDANT_SAMPLES = true;
 
 
 	tic;
@@ -29,7 +32,7 @@ function parsedTrajectories = javaADSbParserParallel(fileDirs)
 		disp('No AIRPORT_DATABASE_FILE_DIR set. Will continue without airport database. ');
 	end
 	javaMethod("setDirs", java_ParallelParser, fileDirs);
-	javaMethod("parseAll", java_ParallelParser, THREAD_COUNT);
+	javaMethod("parseAll", java_ParallelParser, THREAD_COUNT, FILTER_REDUNDANT_SAMPLES);
 
 	parsedTrajectories = [];
 	for i=1:1:length(fileDirs)
@@ -67,7 +70,7 @@ function parsedTrajectories = javaADSbParserParallel(fileDirs)
 
 		rawTrajectory = struct('timeVert', timeVertRaw, 'baroAlt', baroAltRaw, 'timeHori', timeHoriRaw, 'lat', latRaw, 'lon', lonRaw);
 		samplingTime = struct('samplingTimeVert', samplingTimeVert, 'samplingTimeHori', samplingTimeHori);
-		parsedTrajectory = struct('callsign', callsign, 'icao24', icao24, 'time', timeMerged, 'lat', latMerged, 'lon', lonMerged, 'baroAlt', baroAltMerged, 'flightPhases', flightPhasesMerged, 'samplingTime', samplingTime, 'reliabilityTime', reliabilityTimeMerged, 'reliability', reliabilityMerged, 'metrics', struct('reliability', reliabilityMetric, 'completeness', completenessMetric, 'plausibility', plausibilityMetric), 'raw', rawTrajectory);
+		parsedTrajectory = struct('callsign', callsign, 'icao24', icao24, 'time', timeMerged, 'lat', latMerged, 'lon', lonMerged, 'baroAlt', baroAltMerged, 'redundancyFiltered', FILTER_REDUNDANT_SAMPLES, 'flightPhases', flightPhasesMerged, 'samplingTime', samplingTime, 'reliabilityTime', reliabilityTimeMerged, 'reliability', reliabilityMerged, 'metrics', struct('reliability', reliabilityMetric, 'completeness', completenessMetric, 'plausibility', plausibilityMetric), 'raw', rawTrajectory);
 
 		parsedTrajectories = [parsedTrajectories; parsedTrajectory];
 	end

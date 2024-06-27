@@ -10,7 +10,10 @@ function parsedTrajectory = javaADSbParser(fileDir)
 
 % Directory to the airport database for completeness metric ("NONE" if no database available): 
 	AIRPORT_DATABASE_FILE_DIR = "NONE";
-	%AIRPORT_DATABASE_FILE_DIR = "./airportsRecompiled.csv";
+	%AIRPORT_DATABASE_FILE_DIR = "./airportDatabase.attapt";
+	
+% Setting for filtering of redundant samples (true: ON / false: OFF)
+	FILTER_REDUNDANT_SAMPLES = true;
 
 
 	java_TrajectoryStateVectorsData4 = javaObject("de.tu_bs.iff.adsb.dataparser.lib.TrajectoryStateVectorsData4");		% variable containing the java object of class TrajectoryStateVectorsData4
@@ -29,7 +32,7 @@ function parsedTrajectory = javaADSbParser(fileDir)
 		parsedTrajectory = [];
 		return;
 	end
-	errorCode = javaMethod("parseTrajectory", java_TrajectoryVertical);					% parse vertical trajectory
+	errorCode = javaMethod("parseTrajectory", java_TrajectoryVertical, FILTER_REDUNDANT_SAMPLES);			% parse vertical trajectory
 	if(errorCode < 0)
 		disp('Error while parsing vertical trajectory');
 		parsedTrajectory = [];
@@ -51,7 +54,7 @@ function parsedTrajectory = javaADSbParser(fileDir)
 		parsedTrajectory = [];
 		return;
 	end
-	errorCode = javaMethod("parseTrajectory", java_TrajectoryHorizontal);					% parse horizontal trajectory
+	errorCode = javaMethod("parseTrajectory", java_TrajectoryHorizontal, FILTER_REDUNDANT_SAMPLES);			% parse horizontal trajectory
 	if(errorCode < 0)
 		disp('Error while parsing horizontal trajectory');
 		parsedTrajectory = [];
@@ -103,5 +106,5 @@ function parsedTrajectory = javaADSbParser(fileDir)
 
 	rawTrajectory = struct('timeVert', timeVertRaw, 'baroAlt', baroAltRaw, 'timeHori', timeHoriRaw, 'lat', latRaw, 'lon', lonRaw);
 	samplingTime = struct('samplingTimeVert', samplingTimeVert, 'samplingTimeHori', samplingTimeHori);
-	parsedTrajectory = struct('callsign', callsign, 'icao24', icao24, 'time', timeMerged, 'lat', latMerged, 'lon', lonMerged, 'baroAlt', baroAltMerged, 'flightPhases', flightPhasesMerged, 'samplingTime', samplingTime, 'reliabilityTime', reliabilityTimeMerged, 'reliability', reliabilityMerged, 'metrics', struct('reliability', reliabilityMetric, 'completeness', completenessMetric, 'plausibility', plausibilityMetric), 'raw', rawTrajectory);
+	parsedTrajectory = struct('callsign', callsign, 'icao24', icao24, 'time', timeMerged, 'lat', latMerged, 'lon', lonMerged, 'baroAlt', baroAltMerged, 'redundancyFiltered', FILTER_REDUNDANT_SAMPLES, 'flightPhases', flightPhasesMerged, 'samplingTime', samplingTime, 'reliabilityTime', reliabilityTimeMerged, 'reliability', reliabilityMerged, 'metrics', struct('reliability', reliabilityMetric, 'completeness', completenessMetric, 'plausibility', plausibilityMetric), 'raw', rawTrajectory);
 end

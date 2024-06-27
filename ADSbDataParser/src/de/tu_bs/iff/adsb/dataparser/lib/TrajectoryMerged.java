@@ -92,15 +92,7 @@ public class TrajectoryMerged {
 	}
 
 	public double getCompletenessMetric(String airportDatabaseDir) {
-		if(airportDatabaseDir == null)
-			return -1;
-
-		AirportDatabase airportDatabase = new AirportDatabase();
-		int readinError = airportDatabase.readInAirports(airportDatabaseDir);
-		if(readinError < 0)
-			return -1;
-		if(readinError > 0)
-			System.out.println(String.format("Airport database read in (%d faulty entries)", readinError));
+		AirportDatabase airportDatabase = AirportDatabase.readInAirportDatabase(airportDatabaseDir);
 		
 		return getCompletenessMetric(airportDatabase);
 	}

@@ -8,7 +8,8 @@ function parsedTrajectories = javaADSbParserParallelMultiple(fileDirs)
 
 
 % Number of trajectories passed to the data parser at once for parsing. In case of issues (e.g. performance) this value may be adapted/ reduced: 
-	STEP_TRAJECTORY_COUNT = 20;
+%	STEP_TRAJECTORY_COUNT = 24;
+	STEP_TRAJECTORY_COUNT = 4*(feature('numcores')+1);
 
 	parsedTrajectories = [];
 	for i=1:STEP_TRAJECTORY_COUNT:length(fileDirs)

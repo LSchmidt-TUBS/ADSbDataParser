@@ -6,25 +6,17 @@ public class ParserThread extends Thread {
 	
 	ParallelParser parent;
 	
+	private boolean filterRedundantSamples;
+	
 	private TrajectoryStateVectorsData4 trajectoryStateVectorsData4;
 	private TrajectoryVertical trajectoryVertical;
 	private TrajectoryHorizontal trajectoryHorizontal;
 	private TrajectoryMerged trajectoryMerged;
 	private String dir;
 	
-	private AirportDatabase airportDatabase = null;
-	
 	public void setParent(ParallelParser parent) {
 		this.parent = parent;
-
-		if(parent.airportDatabaseDir != null) {
-			airportDatabase = new AirportDatabase();
-			int readinError = airportDatabase.readInAirports(parent.airportDatabaseDir);
-			if(readinError < 0)
-				airportDatabase = null;
-			if(readinError > 0)
-				System.out.println(String.format("Airport database read in (%d faulty entries)", readinError));
-		}
+		this.filterRedundantSamples = parent.filterRedundantSamples;
 	}
 	
 	@Override public void run() {
@@ -40,7 +32,7 @@ public class ParserThread extends Thread {
 			parent.errorCodes[trajectoryIndex] = parseTrajectory();
 			if(parent.errorCodes[trajectoryIndex] >= 0) {
 				parent.reliabilityMetrics[trajectoryIndex] = trajectoryMerged.getReliabilityMetric();
-				parent.completenessMetrics[trajectoryIndex] = trajectoryMerged.getCompletenessMetric(airportDatabase);
+				parent.completenessMetrics[trajectoryIndex] = trajectoryMerged.getCompletenessMetric(parent.airportDatabase);
 				parent.plausibilityMetrics[trajectoryIndex] = trajectoryMerged.getPlausibilityMetric();
 			}
 		}
@@ -56,14 +48,14 @@ public class ParserThread extends Thread {
 		errorCode = trajectoryVertical.setRawTrajectoryFromStateVectorsData4(trajectoryStateVectorsData4);
 		if(errorCode < 0)
 			return errorCode;
-		errorCode = trajectoryVertical.parseTrajectory();
+		errorCode = trajectoryVertical.parseTrajectory(filterRedundantSamples);
 		if(errorCode < 0)
 			return errorCode;
 		
 		errorCode = trajectoryHorizontal.setRawTrajectoryFromStateVectorsData4(trajectoryStateVectorsData4);
 		if(errorCode < 0)
 			return errorCode;
-		errorCode = trajectoryHorizontal.parseTrajectory();
+		errorCode = trajectoryHorizontal.parseTrajectory(filterRedundantSamples);
 		if(errorCode < 0)
 			return errorCode;
 		

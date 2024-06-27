@@ -139,7 +139,7 @@ public class TrajectoryVertical {
 	 * Data of tableRaw will not be changed. 
 	 * @return Error code; -1: error; 0: successful
 	 */
-	public int parseTrajectory() {
+	public int parseTrajectory(boolean filterRedundantInterpolationSamples) {
 		if(tableRaw.time == null)
 			return -1;
 		
@@ -200,8 +200,9 @@ public class TrajectoryVertical {
 		// Cut the beginning of Trajectory if certain conditions are met
 		cutTrajectoryBeginning(/*todDepartureRatio*/(double)0.3, /*maxDepartureAltitude*/(double)10000, /*lowReliabilityThreshold*/(double)0.2, /*maxLowReliabilityTime*/(double)8*60);
 
-		// Filter redundant baroAlt samples
-		filterRedundantSamples(table, verticalFlightPhases, /*baroAltThreshold*/(double)26);
+		// Filter redundant baroAlt samples (if requested)
+		if(filterRedundantInterpolationSamples)
+			filterRedundantInterpolationSamples(table, verticalFlightPhases, /*baroAltThreshold*/(double)26);
 		
 		return 0;
 	}
@@ -478,7 +479,7 @@ public class TrajectoryVertical {
 		// ... Calculate reliability with samplesWindowCount
 	}
 
-	private void filterRedundantSamples(TableVertical table, ArrayList<VerticalFlightPhase> verticalFlightPhases, double baroAltThreshold) {
+	private void filterRedundantInterpolationSamples(TableVertical table, ArrayList<VerticalFlightPhase> verticalFlightPhases, double baroAltThreshold) {
 		for(int i=0; i<verticalFlightPhases.size(); i++) {
 
 			int phaseStartIndex = verticalFlightPhases.get(i).startIndex;

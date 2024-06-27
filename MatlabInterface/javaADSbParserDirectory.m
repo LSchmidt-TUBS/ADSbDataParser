@@ -13,6 +13,11 @@ function parsedTrajectories = javaADSbParserDirectory(directoryDir)
 		if(directoryContent(i).isdir)
 			continue;
 		end
+		if(~endsWidth(string(directoryContent(i).name), ".log"))
+			if(~endsWidth(string(directoryContent(i).name), ".txt"))
+				continue;
+			end
+		end
 		fileDirs = [fileDirs; sprintf("%s\\%s", directoryContent(i).folder, directoryContent(i).name)];
 	end
 

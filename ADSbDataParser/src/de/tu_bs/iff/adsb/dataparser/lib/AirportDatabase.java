@@ -1,5 +1,6 @@
 package de.tu_bs.iff.adsb.dataparser.lib;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -63,6 +64,24 @@ public class AirportDatabase {
 			return airports[nearestAirport];
 		else
 			return null;
+	}
+
+	public static AirportDatabase readInAirportDatabase(String airportDatabaseDir) {
+		if(airportDatabaseDir == null) {
+			System.err.println("Airport database directory not set. ");
+			return null;
+		}
+
+		AirportDatabase airportDatabase = new AirportDatabase();
+		int readinError = airportDatabase.readInAirports(airportDatabaseDir);
+		if(readinError < 0) {
+			System.err.println(String.format("Fatal error while reading airport database file '%s'. ", airportDatabaseDir));
+			return null;
+		}
+		if(readinError > 0)
+			System.err.println(String.format("Airport database read in (%d faulty entries)", readinError));
+		
+		return airportDatabase;
 	}
 
 	public int readInAirports(String dir) {
@@ -175,8 +194,13 @@ public class AirportDatabase {
 		return errorCode;
 	}
 
-	public int recompileCSVdatabase(String inputFileDir, String outputFileDir, int[] fieldIndices, int headerLinesCount, char separationChar, char quotationChar, String[] replace, String[] replacement, boolean latLonAreInRadian, boolean elevationIsInFeet) {
+	public static int recompileCSVdatabase(String inputFileDir, String outputFileDir, int[] fieldIndices, int headerLinesCount, char separationChar, char quotationChar, String[] replace, String[] replacement, boolean latLonAreInRadian, boolean elevationIsInFeet) {
 		int errorCode = 0;
+		
+		if((new File(outputFileDir)).exists()) {
+			System.err.println("Error: Recompile airport database: Output file already exists. ");
+			return (errorCode = -2);
+		}
 		
 		try {
 			Reader fileReader = new FileReader(inputFileDir);
@@ -214,7 +238,7 @@ public class AirportDatabase {
 					if((char)c == '\n')		// end of line ...
 						break;				// ... line readin finished
 					if(lineEnd >= INPUT_DATA_SIZE-1) {
-						System.err.println("Error: Recompile airports csv-file. Input buffer too small");
+						System.err.println("Error: Recompile airport database: Input buffer too small");
 						fileReader.close();
 						fileWriter.close();
 						return (errorCode = -1);
@@ -309,7 +333,7 @@ public class AirportDatabase {
 			fileReader.close();
 			fileWriter.close();
 		} catch(Exception e) {
-			System.err.println("Error: Recompile airports csv-file not successful. ");
+			System.err.println("Error: Recompile airport database not successful. ");
 			e.printStackTrace();
 			return (errorCode = -1);
 		}
