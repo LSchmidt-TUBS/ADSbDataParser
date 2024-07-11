@@ -13,8 +13,8 @@ function parsedTrajectories = javaADSbParserDirectory(directoryDir)
 		if(directoryContent(i).isdir)
 			continue;
 		end
-		if(~endsWidth(string(directoryContent(i).name), ".log"))
-			if(~endsWidth(string(directoryContent(i).name), ".txt"))
+		if(~endsWith(string(directoryContent(i).name), ".log"))
+			if(~endsWith(string(directoryContent(i).name), ".txt"))
 				continue;
 			end
 		end
